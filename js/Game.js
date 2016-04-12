@@ -42,7 +42,10 @@ BATTLESHIP.Game = function(options){
     function init(){
         boardController = new BATTLESHIP.BoardController({
             containerEl: options.containerEl,
-            assetsUrl: options.assetsUrl
+            assetsUrl: options.assetsUrl,
+            callbacks: {
+                pieceCanDrop: isMoveLegal
+            }
         });
 
         boardController.drawBoard(onBoardReady);
@@ -53,49 +56,49 @@ BATTLESHIP.Game = function(options){
 
         piece = {
             type: BATTLESHIP.CARRIER,
-            orientation: 1, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random()), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
        
         piece = {
             type: BATTLESHIP.BATTLESHIP,
-            orientation: 0, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.CRUISER,
-            orientation: 1, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.DESTROYER,
-            orientation: 1, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.DESTROYER,
-            orientation: 0, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.SUBMARINE,
-            orientation: 1, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.SUBMARINE,
-            orientation: 1, // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
@@ -126,11 +129,12 @@ BATTLESHIP.Game = function(options){
                 var x = Math.floor((Math.random() * 10));
                 var y = Math.max(Math.floor((Math.random() * 10 - length)), 0);
             }
-
             for(var i=0; i<length; i++) {
                 if(piece.orientation === 1 && myBoard[x+i][y] !== 0){
+                    done = false;
                     break;
                 } else if(piece.orientation === 0 && myBoard[x][y + i] !== 0){
+                    done = false;
                     break;
                 } else{
                     done = true;
@@ -139,6 +143,23 @@ BATTLESHIP.Game = function(options){
             tries++;
         } while(tries < 10 && !done);
         return [x,y];
+    }
+
+    function isMoveLegal(to, length, orientation){
+        var toRow = to[0];
+        var toCol = to[1];
+        console.log("to: ", toRow, toCol);
+        console.log("Board length:", myBoard.length);
+        console.log("piece (length, orientation):" , length, orientation);
+        // piece will still be on board
+        if(toRow < 0 || toRow > myBoard.length || toCol < 0 || toCol > myBoard.length){
+            return false
+        }else if(orientation === 1 && toRow + length > myBoard.length){
+            return false
+        } else if(orientation === 0 && toCol + length > myBoard.length){
+            return false
+        }
+        return true;
     }
 
     init();

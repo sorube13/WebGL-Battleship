@@ -147,14 +147,8 @@ BATTLESHIP.BoardController = function (options) {
         var piece = board[from[0]][from[1]].piece;
         var toWorldPos = boardToWorld(to);
 
-        console.log("to" , to);
-        console.log("toWorldPos" , toWorldPos);
-
         // // Delete piece from previous position + add piece to new position
         removePiece(piece);
-
-
-
         
         if(piece.type % 2){ // if odd
             pieceMesh.position.x = toWorldPos.x;
@@ -167,7 +161,6 @@ BATTLESHIP.BoardController = function (options) {
                 pieceMesh.position.x = toWorldPos.x ;
                 pieceMesh.position.z = toWorldPos.z + squareSize / 2; 
             }
-           
         }
         
         if(piece.orientation === 1){
@@ -178,8 +171,6 @@ BATTLESHIP.BoardController = function (options) {
             piece.pos[0] = to[0];
             piece.pos[1] = Math.ceil(to[1] - piece.type / 2);
         }
-        console.log(piece.pos);
-        console.log(pieceMesh.position);
         placePiece(piece, pieceMesh);
 
         //pieceMesh.children[0].position.y = 0;
@@ -258,9 +249,6 @@ BATTLESHIP.BoardController = function (options) {
      */
     function initMaterials() {
         // board material
-        // materials.boardMaterial = new THREE.MeshLambertMaterial({
-        //     map: THREE.ImageUtils.loadTexture(assetsUrl + 'board_texture.jpg')
-        // });
         materials.boardMaterial = new THREE.MeshPhongMaterial({
             color: 0x808080
         });
@@ -270,17 +258,7 @@ BATTLESHIP.BoardController = function (options) {
             transparent: true,
             map: THREE.ImageUtils.loadTexture(assetsUrl + 'ground.png')
         });
-     
-        // square material
-        // materials.squareMaterial = new THREE.MeshLambertMaterial({
-        //     map: THREE.ImageUtils.loadTexture(assetsUrl + 'sea_texture.jpg')
-        // });
-
-        // opposing side material
-        // materials.opposingSquareMaterial = new THREE.MeshLambertMaterial({
-        //     map: THREE.ImageUtils.loadTexture(assetsUrl + 'radar_texture.jpg')
-        // });
-
+        // grid
         materials.squareMaterial = new THREE.MeshPhongMaterial({
             color: 0xd3d3d3,
             wireframe   : true,
@@ -394,6 +372,7 @@ BATTLESHIP.BoardController = function (options) {
 
         domElement.addEventListener('mousedown', onMouseDown, false);
         domElement.addEventListener('mouseup', onMouseUp, false);
+        domElement.addEventListener('dblclick', onDoubleClick, false);
     }
 
   
@@ -436,8 +415,12 @@ BATTLESHIP.BoardController = function (options) {
             if(toBoardPos[0] === selectedPiece.boardPos[0] && toBoardPos[1] === selectedPiece.boardPos[1]){
                 deselectPiece();
             } else{
-                instance.movePiece(selectedPiece.boardPos, toBoardPos);
-                selectedPiece = null;
+                if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj.type, selectedPiece.pieceObj.orientation)){
+                    instance.movePiece(selectedPiece.boardPos, toBoardPos);
+                    selectedPiece = null;
+                } else{
+                    deselectPiece();
+                }
             }
         } else{
             deselectPiece();
@@ -454,6 +437,23 @@ BATTLESHIP.BoardController = function (options) {
             selectedPiece.obj.position.z = mouse3D.z;
             
             //selectedPiece.obj.children[0].position.y = 0.75;
+        }
+    }
+
+    function onDoubleClick(event){
+        var mouse3D = getMouse3D(event);
+
+        console.log("double clicked");
+        if(isMouseOnBoard(mouse3D)){
+            console.log("mouse on board");
+            if(isPieceOnMousePosition(mouse3D)){
+                console.log("piece in mouse position");
+                selectPiece(mouse3D);
+                if(selectedPiece){
+                    console.log("got piece" , selectedPiece.obj);
+                    //selectedPiece.obj.rotation.y = 90 * Math.PI / 180;
+                }
+            }
         }
     }
 
@@ -506,6 +506,7 @@ BATTLESHIP.BoardController = function (options) {
             piece: piece,
             pieceMesh: mesh
         }
+        console.log(x);
         for(var i = 0; i < piece.type; i++ ){
             if (piece.orientation === 1){
                 board[x + i][y] = obj;
@@ -518,7 +519,6 @@ BATTLESHIP.BoardController = function (options) {
     function removePiece(piece){
         var x = piece.pos[0];
         var y = piece.pos[1];
-
         for(var i = 0; i < piece.type; i++ ){
             if (piece.orientation === 1){
                 board[x + i][y] = 0;
