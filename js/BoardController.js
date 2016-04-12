@@ -290,7 +290,6 @@ BATTLESHIP.BoardController = function (options) {
      * @param {Object} callback Function to call when the objects have been loaded.
      */
     function initObjects(callback) {
-
         var boardModel = new THREE.Mesh(new THREE.CubeGeometry(squareSize * 10 + 20, 5, squareSize * 10 + 20), materials.boardMaterial);
         boardModel.position.set(squareSize * 5, -0.02, squareSize * 5);
         scene.add(boardModel);
@@ -437,8 +436,8 @@ BATTLESHIP.BoardController = function (options) {
 
 
     /**
-     * Converts the board position to 3D world position.
-     * @param {Array} pos The board position.
+     * Converts the piece board position to 3D world position.
+     * @param {piece} piece objects.
      * @returns {THREE.Vector3}
      */
     function boardPieceToWorld (piece) {
@@ -456,6 +455,11 @@ BATTLESHIP.BoardController = function (options) {
         return new THREE.Vector3(x, y, z);
     }
 
+    /**
+     * Converts the board position to 3D world position.
+     * @param {Array} pos The board position.
+     * @returns {THREE.Vector3}
+     */
     function boardToWorld(pos){
         var x, y, z;
         y = squareSize / 2 + 2.48;
@@ -466,6 +470,11 @@ BATTLESHIP.BoardController = function (options) {
         return new THREE.Vector3(x, y, z);
     }
 
+    /**
+     * Converts the 3D world position to the board position.
+     * @param {position} pos The board position.
+     * @returns [x, y]
+     */
     function worldToBoard(pos){
         var i = Math.ceil(pos.x / squareSize) - 1;
         var j = 10 - Math.ceil((squareSize * 10 - pos.z) / squareSize);
@@ -485,7 +494,6 @@ BATTLESHIP.BoardController = function (options) {
             piece: piece,
             pieceMesh: mesh
         }
-        console.log(x);
         for(var i = 0; i < piece.type; i++ ){
             if (piece.orientation === 1){
                 board[x + i][y] = obj;
