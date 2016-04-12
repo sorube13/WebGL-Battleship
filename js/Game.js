@@ -54,50 +54,50 @@ BATTLESHIP.Game = function(options){
         piece = {
             type: BATTLESHIP.CARRIER,
             orientation: 1, // 1: horizontal 0: vertical
-            pos: [0, 0]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
        
         piece = {
             type: BATTLESHIP.BATTLESHIP,
             orientation: 0, // 1: horizontal 0: vertical
-            pos: [6, 3]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.CRUISER,
             orientation: 1, // 1: horizontal 0: vertical
-            pos: [1, 8]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.DESTROYER,
             orientation: 1, // 1: horizontal 0: vertical
-            pos: [1, 3]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.DESTROYER,
             orientation: 0, // 1: horizontal 0: vertical
-            pos: [9, 8]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.SUBMARINE,
             orientation: 1, // 1: horizontal 0: vertical
-            pos: [8, 1]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
 
         piece = {
             type: BATTLESHIP.SUBMARINE,
             orientation: 1, // 1: horizontal 0: vertical
-            pos: [3, 5]
         };
+        piece.pos = setRandomPos(piece);
         placePiece(piece);
     }
 
@@ -112,6 +112,33 @@ BATTLESHIP.Game = function(options){
             }       
         }
         boardController.addPiece(piece);
+    }
+
+    function setRandomPos(piece){
+        var length = piece.type;
+        var tries = 0;
+        var done = false;
+        do{
+            if(piece.orientation === 1){
+                var x = Math.max(Math.floor((Math.random() * 10 - length)), 0);
+                var y = Math.floor((Math.random() * 10));
+            } else {
+                var x = Math.floor((Math.random() * 10));
+                var y = Math.max(Math.floor((Math.random() * 10 - length)), 0);
+            }
+
+            for(var i=0; i<length; i++) {
+                if(piece.orientation === 1 && myBoard[x+i][y] !== 0){
+                    break;
+                } else if(piece.orientation === 0 && myBoard[x][y + i] !== 0){
+                    break;
+                } else{
+                    done = true;
+                }
+            }
+            tries++;
+        } while(tries < 10 && !done);
+        return [x,y];
     }
 
     init();
