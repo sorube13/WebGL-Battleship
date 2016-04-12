@@ -372,7 +372,6 @@ BATTLESHIP.BoardController = function (options) {
 
         domElement.addEventListener('mousedown', onMouseDown, false);
         domElement.addEventListener('mouseup', onMouseUp, false);
-        domElement.addEventListener('dblclick', onDoubleClick, false);
     }
 
   
@@ -415,12 +414,8 @@ BATTLESHIP.BoardController = function (options) {
             if(toBoardPos[0] === selectedPiece.boardPos[0] && toBoardPos[1] === selectedPiece.boardPos[1]){
                 deselectPiece();
             } else{
-                if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj.type, selectedPiece.pieceObj.orientation)){
-                    instance.movePiece(selectedPiece.boardPos, toBoardPos);
-                    selectedPiece = null;
-                } else{
-                    deselectPiece();
-                }
+                instance.movePiece(selectedPiece.boardPos, toBoardPos);
+                selectedPiece = null;
             }
         } else{
             deselectPiece();
@@ -440,22 +435,6 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
-    function onDoubleClick(event){
-        var mouse3D = getMouse3D(event);
-
-        console.log("double clicked");
-        if(isMouseOnBoard(mouse3D)){
-            console.log("mouse on board");
-            if(isPieceOnMousePosition(mouse3D)){
-                console.log("piece in mouse position");
-                selectPiece(mouse3D);
-                if(selectedPiece){
-                    console.log("got piece" , selectedPiece.obj);
-                    //selectedPiece.obj.rotation.y = 90 * Math.PI / 180;
-                }
-            }
-        }
-    }
 
     /**
      * Converts the board position to 3D world position.

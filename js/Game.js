@@ -43,9 +43,6 @@ BATTLESHIP.Game = function(options){
         boardController = new BATTLESHIP.BoardController({
             containerEl: options.containerEl,
             assetsUrl: options.assetsUrl,
-            callbacks: {
-                pieceCanDrop: isMoveLegal
-            }
         });
 
         boardController.drawBoard(onBoardReady);
@@ -143,23 +140,6 @@ BATTLESHIP.Game = function(options){
             tries++;
         } while(tries < 10 && !done);
         return [x,y];
-    }
-
-    function isMoveLegal(to, length, orientation){
-        var toRow = to[0];
-        var toCol = to[1];
-        console.log("to: ", toRow, toCol);
-        console.log("Board length:", myBoard.length);
-        console.log("piece (length, orientation):" , length, orientation);
-        // piece will still be on board
-        if(toRow < 0 || toRow > myBoard.length || toCol < 0 || toCol > myBoard.length){
-            return false
-        }else if(orientation === 1 && toRow + length > myBoard.length){
-            return false
-        } else if(orientation === 0 && toCol + length > myBoard.length){
-            return false
-        }
-        return true;
     }
 
     init();
