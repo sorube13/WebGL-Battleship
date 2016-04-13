@@ -153,26 +153,29 @@ BATTLESHIP.BoardController = function (options) {
         if(piece.type % 2){ // if odd
             pieceMesh.position.x = toWorldPos.x;
             pieceMesh.position.z = toWorldPos.z; 
+            if(piece.orientation === 1){
+                piece.pos[0] = to[0] - Math.floor(piece.type / 2);
+                piece.pos[1] = to[1];
+            } else{
+                piece.pos[0] = to[0];
+                piece.pos[1] = to[1] - Math.floor(piece.type / 2);
+            }
+            
         } else{
             if(piece.orientation === 1){
                 pieceMesh.position.x = toWorldPos.x + squareSize / 2;
                 pieceMesh.position.z = toWorldPos.z; 
+                piece.pos[0] = to[0] - piece.type / 2 + 1;
+                piece.pos[1] = to[1];
             } else{
                 pieceMesh.position.x = toWorldPos.x ;
                 pieceMesh.position.z = toWorldPos.z + squareSize / 2; 
+                piece.pos[0] = to[0];
+                piece.pos[1] = to[1] - piece.type / 2 + 1;
             }
         }
-        
-        if(piece.orientation === 1){
-            piece.pos[0] = Math.ceil(to[0] - piece.type / 2);
-            piece.pos[1] = to[1];
-
-        } else{
-            piece.pos[0] = to[0];
-            piece.pos[1] = Math.ceil(to[1] - piece.type / 2);
-        }
         placePiece(piece, pieceMesh);
-
+     
         //pieceMesh.children[0].position.y = 0;
     }
     
@@ -290,7 +293,6 @@ BATTLESHIP.BoardController = function (options) {
      * @param {Object} callback Function to call when the objects have been loaded.
      */
     function initObjects(callback) {
-
         var boardModel = new THREE.Mesh(new THREE.CubeGeometry(squareSize * 10 + 20, 5, squareSize * 10 + 20), materials.boardMaterial);
         boardModel.position.set(squareSize * 5, -0.02, squareSize * 5);
         scene.add(boardModel);
@@ -372,7 +374,7 @@ BATTLESHIP.BoardController = function (options) {
 
         domElement.addEventListener('mousedown', onMouseDown, false);
         domElement.addEventListener('mouseup', onMouseUp, false);
-        domElement.addEventListener('dblclick', onDoubleClick, false);
+        domElement.addEventListener('ondblclick', onDoubleClick, false);
     }
 
   
@@ -410,19 +412,22 @@ BATTLESHIP.BoardController = function (options) {
         var mouse3D = getMouse3D(event);
 
         if(isMouseOnBoard(mouse3D) && selectedPiece){
-            var toBoardPos = worldToBoard(mouse3D);
-
+            var toBoardPos = worldToBoard(mouse3D); 
             if(toBoardPos[0] === selectedPiece.boardPos[0] && toBoardPos[1] === selectedPiece.boardPos[1]){
                 deselectPiece();
             } else{
-                if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj.type, selectedPiece.pieceObj.orientation)){
+
+                if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj)){
                     instance.movePiece(selectedPiece.boardPos, toBoardPos);
+                    if(callbacks.pieceDropped){
+                        callbacks.pieceDropped(selectedPiece.boardPos, toBoardPos);
+                    }
                     selectedPiece = null;
-                } else{
+                }else{
                     deselectPiece();
                 }
             }
-        } else{
+        }else{
             deselectPiece();
         }
 
@@ -441,25 +446,13 @@ BATTLESHIP.BoardController = function (options) {
     }
 
     function onDoubleClick(event){
-        var mouse3D = getMouse3D(event);
-
-        console.log("double clicked");
-        if(isMouseOnBoard(mouse3D)){
-            console.log("mouse on board");
-            if(isPieceOnMousePosition(mouse3D)){
-                console.log("piece in mouse position");
-                selectPiece(mouse3D);
-                if(selectedPiece){
-                    console.log("got piece" , selectedPiece.obj);
-                    //selectedPiece.obj.rotation.y = 90 * Math.PI / 180;
-                }
-            }
-        }
+        console.log('double click!');
     }
 
+
     /**
-     * Converts the board position to 3D world position.
-     * @param {Array} pos The board position.
+     * Converts the piece board position to 3D world position.
+     * @param {piece} piece objects.
      * @returns {THREE.Vector3}
      */
     function boardPieceToWorld (piece) {
@@ -477,6 +470,11 @@ BATTLESHIP.BoardController = function (options) {
         return new THREE.Vector3(x, y, z);
     }
 
+    /**
+     * Converts the board position to 3D world position.
+     * @param {Array} pos The board position.
+     * @returns {THREE.Vector3}
+     */
     function boardToWorld(pos){
         var x, y, z;
         y = squareSize / 2 + 2.48;
@@ -487,6 +485,11 @@ BATTLESHIP.BoardController = function (options) {
         return new THREE.Vector3(x, y, z);
     }
 
+    /**
+     * Converts the 3D world position to the board position.
+     * @param {position} pos The board position.
+     * @returns [x, y]
+     */
     function worldToBoard(pos){
         var i = Math.ceil(pos.x / squareSize) - 1;
         var j = 10 - Math.ceil((squareSize * 10 - pos.z) / squareSize);
@@ -506,7 +509,6 @@ BATTLESHIP.BoardController = function (options) {
             piece: piece,
             pieceMesh: mesh
         }
-        console.log(x);
         for(var i = 0; i < piece.type; i++ ){
             if (piece.orientation === 1){
                 board[x + i][y] = obj;
