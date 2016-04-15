@@ -11,8 +11,13 @@ BATTLESHIP.Game = function(options){
 
     options = options || {};
 
+    /** @type BATTLESHIP.BoardController */
     var boardController = null;
 
+    /**
+     * The user board representation.
+     * @type Array
+     */
     var myBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -26,6 +31,10 @@ BATTLESHIP.Game = function(options){
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
+    /**
+     * The opponent board representation.
+     * @type Array
+     */
     var oppBoard = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -39,6 +48,9 @@ BATTLESHIP.Game = function(options){
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
+    /**
+     * Initialize boardController object
+     */
     function init(){
         boardController = new BATTLESHIP.BoardController({
             containerEl: options.containerEl,
@@ -53,6 +65,9 @@ BATTLESHIP.Game = function(options){
         boardController.drawBoard(onBoardReady);
     }
 
+    /**
+     * Create objects for the board.
+     */
     function onBoardReady(){
         var piece;
 
@@ -120,6 +135,10 @@ BATTLESHIP.Game = function(options){
         boardController.addPiece(piece);
     }
 
+    /**
+     * Saves piece in the board according to the piece's position.
+     * @param {Object} piece The piece object.
+     */
     function placePiece(piece){
         var x = piece.pos[0];
         var y = piece.pos[1];
@@ -130,9 +149,14 @@ BATTLESHIP.Game = function(options){
                 myBoard[x][y + i] = piece;
             }       
         }
-        // boardController.addPiece(piece);
     }
 
+    /**
+     * Removes piece and mesh from the board according to the piece's previous position.
+     * @param {Object} piece The piece object.
+     * @param {boolean} orientation The original orientation of the piece object.
+     * @param {Array} from The original position of the piece object [x,y]
+     */
     function removePiece(piece, orientation, from){
         var x = from[0];
         var y = from[1];
@@ -145,6 +169,13 @@ BATTLESHIP.Game = function(options){
         }
     }
 
+    /**
+     * Creates a random set of coordinates inside the board where there are no other 
+     * pieces. 
+     * Checks whethere there are other pieces in the length of the piece given.
+     * @param {Object} piece The piece object.
+     * @return {Array} [x,y] Random coordiantes inside board
+     */
     function setRandomPos(piece){
         var length = piece.type;
         var tries = 0;
@@ -173,6 +204,12 @@ BATTLESHIP.Game = function(options){
         return [x,y];
     }
 
+     /**
+     * Checks whether the piece can be moved to the to position.
+     * @param {Array} to Target position fot he piece object.
+     * @param {Object} piece The piece object.
+     * @return {boolean} 
+     */
     function isMoveLegal(to, piece){
         var length = piece.type;
         var orientation = piece.orientation;
@@ -234,6 +271,13 @@ BATTLESHIP.Game = function(options){
         return true;
     }
 
+     /**
+     * Removes piece and mesh from the board according to the piece's previous position.
+     * @param {Array} from The original position of the piece.
+     * @param {boolean} orientation The orientation of the piece object.
+     * @param {Array} to The target position of the piece object [x,y]
+     * Removes the piece from it's original position and places it in it's new position.
+     */
     function pieceMoved(from, orientation, to){
         var toCol = to[0]
         var toRow = to[1];
@@ -244,7 +288,13 @@ BATTLESHIP.Game = function(options){
         placePiece(piece);
     }
 
-    function isRotationLegal(piece, center, pos){
+    /**
+     * Checks whether the piece can be rotated.
+     * @param {Object} piece The piece object.
+     * @param {Array} center Center coordinates of the piece.
+     * @return {boolean} 
+     */
+    function isRotationLegal(piece, center){
         var length = piece.type;
         var l2 = Math.floor(length / 2);
         var orientation = piece.orientation;
@@ -322,28 +372,6 @@ BATTLESHIP.Game = function(options){
 
     }
 
-    // function centerToPos(piece, to){
-    //     var x, y;
-    //     if(piece.type % 2){ // if odd
-    //        if(piece.orientation === 1){
-    //             x = Math.max(to[0] - Math.floor(piece.type / 2), 0);
-    //             y = to[1];
-    //         } else{
-    //             x = to[0];
-    //             y = Math.max(to[1] - Math.floor(piece.type / 2), 0);
-    //         }
-            
-    //     } else{
-    //         if(piece.orientation === 1){
-    //             x = Math.max(to[0] - piece.type / 2 + 1, 0);
-    //             y = to[1];
-    //         } else{
-    //             x = to[0];
-    //             y = Math.max(to[1] - piece.type / 2 + 1, 0);
-    //         }
-    //     }
-    //     return [x, y];
-    // }
 
     init();
 }

@@ -181,7 +181,7 @@ BATTLESHIP.BoardController = function (options) {
     
     this.rotatePiece = function(center){
         selectedPiece.obj.rotation.y += 90 * Math.PI / 180;  
-        selectedPiece.pieceObj.orientation = changeOrientation(selectedPiece.pieceObj);
+        selectedPiece.pieceObj.orientation = 1 - selectedPiece.pieceObj.orientation;
         selectedPiece.pieceObj.pos = centerToPos(selectedPiece.pieceObj, center);
         console.log('positon',selectedPiece.obj.position);
         if(!(selectedPiece.pieceObj.type % 2)){
@@ -387,6 +387,9 @@ BATTLESHIP.BoardController = function (options) {
         callback();
     }
 
+    /**
+     * Initialize the listeners.
+     */
     function initListeners(){
         var domElement = renderer.domElement;
 
@@ -411,6 +414,12 @@ BATTLESHIP.BoardController = function (options) {
         renderer.render(scene, camera);
     }
 
+    /**
+     * Listener for mouse down event.
+     * Selects a piece from mouse position
+     * Adds mouse move listener
+     * Blocks camera rotation
+     */
     function onMouseDown(event){
         var mouse3D = getMouse3D(event);
 
@@ -423,6 +432,13 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Listener for mouse up event.
+     * Selects piece from mouse position
+     * Call callbacks to check if piece can be dropped and dropping it
+     * Moves the piece to the new position
+     * Activates the camera rotation
+     */
     function onMouseUp(event){
         renderer.domElement.removeEventListener('mousemove', onMouseMove, false);
 
@@ -449,6 +465,10 @@ BATTLESHIP.BoardController = function (options) {
         cameraController.userRotate = true;
     }
 
+    /**
+     * Listener for mouse move event.
+     * Moves position of piece according to mouse position if piece is selected
+     */
     function onMouseMove(event){    
         var mouse3D = getMouse3D(event);
 
@@ -459,6 +479,13 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Listener for double click event.
+     * Selects piece from mouse position
+     * Calls callbacks to check if piece can be rotated and saves the rotation
+     * Rotates piece in the board
+     * Deselects piece
+     */
     function onDoubleClick(event){
         var mouse3D = getMouse3D(event);
 
@@ -536,6 +563,11 @@ BATTLESHIP.BoardController = function (options) {
 
     }
 
+    /**
+     * Saves piece and mesh in the board according to the piece's position.
+     * @param {Object} piece The piece object.
+     * @param {THREE.Mesh} mesh The piece Mesh object.
+     */
     function placePiece(piece, mesh){
         var x = piece.pos[0];
         var y = piece.pos[1];
@@ -552,6 +584,12 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Removes piece and mesh from the board according to the piece's previous position.
+     * @param {Object} piece The piece object.
+     * @param {boolean} orientation The original orientation of the piece object.
+     * @param {Array} from The original position of the piece object [x,y]
+     */
     function removePiece(piece, orientation, from){
         var x = from[0];
         var y = from[1];
@@ -564,6 +602,10 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Finds the coordinates of the mouse in the scene 
+     * return position Position of the mouse in perspective with the bottom board (user board)
+     */
     function getMouse3D(mouseEvent){
         var x, y;
 
@@ -595,6 +637,11 @@ BATTLESHIP.BoardController = function (options) {
         return pos;
     }
 
+    /**
+     * Checks whether the mouse is on the user's board.
+     * @param {Array} pos The coordinates of the mouse position in the scene.
+     * return {boolean}.
+     */
     function isMouseOnBoard(pos) {
         // if(pos.x >= 0 && pos.x <= squareSize * 10 && pos.y >= 0 && pos.y <= squareSize*10){
         //     console.log("x: " + pos.x + " y: " + pos.y + " z: " + pos.z);
@@ -608,6 +655,11 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Checks whether there is a piece at the mouse's position.
+     * @param {Array} pos The coordinates of the mouse position in the scene.
+     * return {boolean}.
+     */
     function isPieceOnMousePosition(pos){
         var boardPos = worldToBoard(pos);
         console.log("isPieceOnMousePosition: [", boardPos[0], '][', boardPos[1], '] = ', board[boardPos[0]][boardPos[1]])
@@ -617,6 +669,19 @@ BATTLESHIP.BoardController = function (options) {
         return false;
     }
 
+     /**
+     * Updates selectedPiece with the objects related to the object in the position given.
+     * @param {Array} pos The coordinates of the piece chosen.
+     * selectedPiece{
+            boardPos: actual coordinates in board array
+            obj: THREE.Mesh object of the piece at board[boardPos]
+            objPiece: piece at board[boardPos] 
+            origPosition: original obj position
+            origPos: original piece pos attribute
+            origOrient: original piece orientation
+        }
+     * return {boolean}.
+     */
     function selectPiece(pos){
         var boardPos = worldToBoard(pos);
 
@@ -634,6 +699,9 @@ BATTLESHIP.BoardController = function (options) {
         return true;
     }
 
+    /**
+     * Deselects selectedPiece and resets original position.
+     */
     function deselectPiece(){
         if(!selectedPiece){
             return;
@@ -645,6 +713,13 @@ BATTLESHIP.BoardController = function (options) {
         selectedPiece = null;
     }
 
+    /**
+     * Given a piece and coordinates of the center of the piece(to),
+       returns the left hand coordinate of the piece, corresponding to the pos attribute.
+     * @param {Object} piece Piece whose left hand coordinates it is going to return 
+     * @param {Array} to The center coordinates of the piece chosen.
+     * return {Array} [x, y] piece pos.
+     */
     function centerToPos(piece, to){
         var x, y;
         if(piece.type % 2){ // if odd
@@ -668,12 +743,14 @@ BATTLESHIP.BoardController = function (options) {
         return [x, y];
     }
 
+    /**
+     * Checks whether the piece is outside the board and resets the coordinates so that it is inside.
+     */
     function checkInside(){
         var piece = selectedPiece.pieceObj;
         var length = piece.type;
         var orientation = piece.orientation;
         var pos = piece.pos;
-        //var mesh = selectedPiece.obj.position;
 
         if(orientation === 0){
             if(pos[1] < 0){
@@ -692,17 +769,8 @@ BATTLESHIP.BoardController = function (options) {
                 selectedPiece.obj.position.x = (board.length - length / 2) * squareSize;
             }
         }    
-        //return [pos, mesh];
     }
 
-    function changeOrientation(piece){
-        if(piece.orientation === 1){
-            return 0;
-        }else{
-            return 1;
-        }
-    }
-
-    
+   
 };
 
