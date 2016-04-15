@@ -45,6 +45,7 @@ BATTLESHIP.Game = function(options){
             assetsUrl: options.assetsUrl,
             callbacks: {
                 pieceCanDrop : isMoveLegal,
+                pieceCanRotate: isRotationLegal,
                 pieceDropped : pieceMoved 
             }
         });
@@ -67,7 +68,7 @@ BATTLESHIP.Game = function(options){
         piece = {
             id : 2,
             type: BATTLESHIP.BATTLESHIP,
-            orientation:  1//Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation:  Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
         placePiece(piece);
@@ -76,29 +77,29 @@ BATTLESHIP.Game = function(options){
         piece = {
             id: 3,
             type: BATTLESHIP.CRUISER,
-            orientation: 0//Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
-        placePiece(piece);
-        boardController.addPiece(piece);
+        // placePiece(piece);
+        // boardController.addPiece(piece);
 
         piece = {
             id : 4,
             type: BATTLESHIP.DESTROYER,
-            orientation: 0//Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
-        placePiece(piece);
-        boardController.addPiece(piece);
+        // placePiece(piece);
+        // boardController.addPiece(piece);
 
         piece = {
             id : 5,
             type: BATTLESHIP.DESTROYER,
-            orientation: 0//Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
-        placePiece(piece);
-        boardController.addPiece(piece);
+        // placePiece(piece);
+        // boardController.addPiece(piece);
 
         piece = {
             id : 6,
@@ -106,8 +107,8 @@ BATTLESHIP.Game = function(options){
             orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
-        placePiece(piece);
-        boardController.addPiece(piece);
+        // placePiece(piece);
+        // boardController.addPiece(piece);
 
         piece = {
             id : 7,
@@ -115,8 +116,8 @@ BATTLESHIP.Game = function(options){
             orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
         };
         piece.pos = setRandomPos(piece);
-        placePiece(piece);
-        boardController.addPiece(piece);
+        // placePiece(piece);
+        // boardController.addPiece(piece);
     }
 
     function placePiece(piece){
@@ -132,11 +133,11 @@ BATTLESHIP.Game = function(options){
         // boardController.addPiece(piece);
     }
 
-    function removePiece(piece, from){
+    function removePiece(piece, orientation, from){
         var x = from[0];
         var y = from[1];
         for(var i = 0; i < piece.type; i++ ){
-            if (piece.orientation === 1){
+            if (orientation === 1){
                 myBoard[x + i][y] = 0;
             }else{
                 myBoard[x][y + i] = 0;
@@ -179,28 +180,28 @@ BATTLESHIP.Game = function(options){
         var toCol = to[0];
         var l2 = Math.floor(length/2);
         if(toRow < 0 || toRow >= myBoard.length || toCol < 0 || toCol >= myBoard.length){
-            console.log("legalNo1");
+            console.log("legalNo1", piece);
             return false
         }else if(length%2){ // odd
             if(orientation === 1){
                 if(toCol < l2 || toCol >= myBoard.length - l2){
-                    console.log("legalNo2");
+                    console.log("legalNo2", piece);
                     return false;
                 } 
                 for(var i = toCol - l2; i < toCol + l2 + 1; i++){
                     if((myBoard[i][toRow]) && (myBoard[i][toRow].id != piece.id)){
-                        console.log("legalNo3");
+                        console.log("legalNo3", i, toRow, myBoard[i][toRow]);
                         return false;
                     }
                 }
             } else if(orientation === 0){
                 if (toRow < l2 || toRow >= myBoard.length - l2){
-                    console.log("legalNo4");
+                    console.log("legalNo4", piece);
                     return false;
                 } 
                 for(var i = toRow - l2; i < toRow + l2 + 1; i++){
                     if((myBoard[toCol][i])&& (myBoard[i][toRow].id != piece.id)){
-                        console.log("legalNo5");
+                        console.log("legalNo5", toCol, i, myBoard[toCol][i]);
                         return false;
                     }
                 }
@@ -208,23 +209,23 @@ BATTLESHIP.Game = function(options){
         }else{ // even
             if(orientation === 1){
                 if(toCol < l2 - 1 || toCol >= myBoard.length - l2){
-                    console.log("legalNo6");
+                    console.log("legalNo6", piece);
                     return false;
                 }
                 for(var i = toCol - l2 + 1; i < toCol + l2 + 1; i++){
                     if((myBoard[i][toRow])&& (myBoard[i][toRow].id != piece.id)){
-                        console.log("legalNo7");
+                        console.log("legalNo7", i, toRow, myBoard[i][toRow]);
                         return false;
                     }
                 }
             } else if(orientation === 0){
                 if(toRow < l2 - 1 || toRow >= myBoard.length - l2){
-                    console.log("legalNo8");
+                    console.log("legalNo8", piece);
                     return false;
                 } 
                 for(var i = toRow - l2 + 1; i < toRow + l2 + 1; i++){
-                    if((myBoard[toCol][i]) && (myBoard[i][toRow].id != piece.id)){
-                        console.log("legalNo9");
+                    if((myBoard[toCol][i]) && (myBoard[toCol][i].id != piece.id)){
+                        console.log("legalNo9", toCol, i, myBoard[toCol][i]);
                         return false;
                     }
                 }
@@ -233,39 +234,89 @@ BATTLESHIP.Game = function(options){
         return true;
     }
 
-    function pieceMoved(from, to){
+    function pieceMoved(from, orientation, to){
         var toCol = to[0]
         var toRow = to[1];
 
         var piece = myBoard[from[0]][from[1]];
-        removePiece(piece, centerToPos(piece, from));
-        piece.pos = centerToPos(piece, to);
+        removePiece(piece, orientation, from);
 
         placePiece(piece);
     }
 
-    function centerToPos(piece, to){
-        var x, y;
-        if(piece.type % 2){ // if odd
-           if(piece.orientation === 1){
-                x = Math.max(to[0] - Math.floor(piece.type / 2), 0);
-                y = to[1];
-            } else{
-                x = to[0];
-                y = Math.max(to[1] - Math.floor(piece.type / 2), 0);
+    function isRotationLegal(piece, center){
+        var length = piece.type;
+        var l2 = Math.floor(length / 2);
+        var orientation = piece.orientation;
+
+        // if(orientation === 0){
+        //     if(center[0]< )
+        // }else{
+        //     if(center[1] < )
+        // }
+
+        if(length % 2){ // odd       
+            if(orientation === 1){ // piece is going to rotate and we have to check the positions on top and bottom of center
+                for(var i = center[1] - l2; i <= center[1] + l2; i++){
+                    if((myBoard[center[0]][i]) && (myBoard[center[0]][i].id !== piece.id)){
+                        console.log("ilegalRotation1");
+                        return false;
+                    }
+                }
+
+            }else{
+                for(var i = center[0] - l2; i <= center[0] + l2; i++){
+                    if((myBoard[i][center[1]]) && (myBoard[i][center[1]].id !== piece.id)){
+                        console.log("ilegalRotation2");
+                        return false;
+                    }
+                }
             }
-            
         } else{
-            if(piece.orientation === 1){
-                x = Math.max(to[0] - piece.type / 2 + 1, 0);
-                y = to[1];
-            } else{
-                x = to[0];
-                y = Math.max(to[1] - piece.type / 2 + 1, 0);
+            if(orientation === 1){ // piece is going to rotate and we have to check the positions on top and bottom of center
+                for(var i = center[1] - l2 + 1; i <= center[1] + l2; i++){
+                    if((myBoard[center[0]][i]) && (myBoard[center[0]][i].id !== piece.id)){
+                        console.log("ilegalRotation3");
+                        return false;
+                    }
+                }
+
+            }else{
+                for(var i = center[0] - l2 + 1; i <= center[0] + l2; i++){
+                    if((myBoard[i][center[1]]) && (myBoard[i][center[1]].id !== piece.id)){
+                        console.log("ilegalRotation4");
+                        return false;
+                    }
+                }
             }
         }
-        return [x, y];
+
+        return true;
+
     }
+
+    // function centerToPos(piece, to){
+    //     var x, y;
+    //     if(piece.type % 2){ // if odd
+    //        if(piece.orientation === 1){
+    //             x = Math.max(to[0] - Math.floor(piece.type / 2), 0);
+    //             y = to[1];
+    //         } else{
+    //             x = to[0];
+    //             y = Math.max(to[1] - Math.floor(piece.type / 2), 0);
+    //         }
+            
+    //     } else{
+    //         if(piece.orientation === 1){
+    //             x = Math.max(to[0] - piece.type / 2 + 1, 0);
+    //             y = to[1];
+    //         } else{
+    //             x = to[0];
+    //             y = Math.max(to[1] - piece.type / 2 + 1, 0);
+    //         }
+    //     }
+    //     return [x, y];
+    // }
 
     init();
 }
