@@ -392,6 +392,7 @@ BATTLESHIP.BoardController = function (options) {
 
         domElement.addEventListener('mousedown', onMouseDown, false);
         domElement.addEventListener('mouseup', onMouseUp, false);
+        domElement.addEventListener('dblclick', onDoubleClick, false);
     }
 
   
@@ -432,8 +433,6 @@ BATTLESHIP.BoardController = function (options) {
             if((toBoardPos[0] === selectedPiece.boardPos[0] && toBoardPos[1] === selectedPiece.boardPos[1])){
                 deselectPiece();
             } else{
-                instance.movePiece(selectedPiece.boardPos, toBoardPos);
-                selectedPiece = null;
                 if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj)){
                     instance.movePiece(selectedPiece.boardPos, toBoardPos);
                     if(callbacks.pieceDropped){

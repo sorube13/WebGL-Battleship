@@ -173,7 +173,6 @@ BATTLESHIP.Game = function(options){
         return [x,y];
     }
 
-
     function isMoveLegal(to, piece){
         var length = piece.type;
         var orientation = piece.orientation;
