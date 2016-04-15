@@ -432,10 +432,8 @@ BATTLESHIP.BoardController = function (options) {
             if((toBoardPos[0] === selectedPiece.boardPos[0] && toBoardPos[1] === selectedPiece.boardPos[1])){
                 deselectPiece();
             } else{
-<<<<<<< HEAD
                 instance.movePiece(selectedPiece.boardPos, toBoardPos);
                 selectedPiece = null;
-=======
                 if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj)){
                     instance.movePiece(selectedPiece.boardPos, toBoardPos);
                     if(callbacks.pieceDropped){
@@ -445,7 +443,6 @@ BATTLESHIP.BoardController = function (options) {
                 }else{
                     deselectPiece();
                 }
->>>>>>> development
             }
         }else{
             deselectPiece();
@@ -463,8 +460,6 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
-<<<<<<< HEAD
-=======
     function onDoubleClick(event){
         var mouse3D = getMouse3D(event);
 
@@ -489,7 +484,6 @@ BATTLESHIP.BoardController = function (options) {
             }
         }
     }
->>>>>>> development
 
     /**
      * Converts the piece board position to 3D world position.
