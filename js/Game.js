@@ -74,64 +74,57 @@ BATTLESHIP.Game = function(options){
         piece = {
             id: 1,
             type: BATTLESHIP.CARRIER,
-            orientation: Math.round(Math.random()), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [0, 0]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
        
         piece = {
             id : 2,
             type: BATTLESHIP.BATTLESHIP,
-            orientation:  Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1,  // 1: horizontal 0: vertical
+            pos: [0, 2]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
 
         piece = {
             id: 3,
             type: BATTLESHIP.CRUISER,
-            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [0, 4]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
 
         piece = {
             id : 4,
             type: BATTLESHIP.DESTROYER,
-            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [0, 6]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
 
         piece = {
             id : 5,
             type: BATTLESHIP.DESTROYER,
-            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [3, 6]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
 
         piece = {
             id : 6,
             type: BATTLESHIP.SUBMARINE,
-            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [0, 8]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
 
         piece = {
             id : 7,
             type: BATTLESHIP.SUBMARINE,
-            orientation: Math.round(Math.random() ), // 1: horizontal 0: vertical
+            orientation: 1, // 1: horizontal 0: vertical
+            pos: [2, 8]
         };
-        piece.pos = setRandomPos(piece);
-        placePiece(piece);
         boardController.addPiece(piece);
     }
 
@@ -278,12 +271,12 @@ BATTLESHIP.Game = function(options){
      * @param {Array} to The target position of the piece object [x,y]
      * Removes the piece from it's original position and places it in it's new position.
      */
-    function pieceMoved(from, orientation, to){
+    function pieceMoved(piece, orientation, from, to, initSet){
         var toCol = to[0]
         var toRow = to[1];
 
-        var piece = myBoard[from[0]][from[1]];
-        removePiece(piece, orientation, from);
+        if(!initSet)
+            removePiece(piece, orientation, from);
 
         placePiece(piece);
     }
