@@ -83,11 +83,32 @@ BATTLESHIP.BoardController = function (options) {
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ];
 
+    /**
+     * The initial ship board representation.
+     * @type Array
+     */
+    var initBoard = [
+        [0, 0, 0, 0, 0], // type 5
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0], // type 4
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0], // type 3
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0], // type 2  x 2 
+        [0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0], // type 1  x 2
+
+    ];
+
     /** @type Object */
     var selectedPiece = null;
 
     /** @type Object */
     var callbacks = options.callbacks || {};
+
+    var setting = true;
+
+    var initSet = false;
 
     /**********************************************************************************************/
     /* Public methods *****************************************************************************/
@@ -130,24 +151,30 @@ BATTLESHIP.BoardController = function (options) {
             default:
                 break;
         }
-        pieceMesh.position = boardPieceToWorld(piece);
+        pieceMesh.position = initBoardPieceToWorld(piece);
         if(piece.orientation === 0){
             pieceMesh.rotation.y = 90 * Math.PI / 180; 
         }
 
-        placePiece(piece, pieceMesh);
+        placePiece(piece, pieceMesh, initBoard);
 
         scene.add(pieceMesh);
 
     }
 
-    this.movePiece = function(from, to){
-        var pieceMesh = board[from[0]][from[1]].pieceMesh;
-        var piece = board[from[0]][from[1]].piece;
+    this.movePiece = function(from, to, initSet){
+        var pieceMesh = selectedPiece.obj; // board[from[0]][from[1]].pieceMesh;
+        var piece = selectedPiece.pieceObj;// board[from[0]][from[1]].piece;
         var toWorldPos = boardToWorld(to);
 
+        if(initSet){
+            var myBoard = initBoard;
+        } else{
+            var myBoard = board;
+        }
+
         // // Delete piece from previous position + add piece to new position
-        removePiece(piece, selectedPiece.origOrient, selectedPiece.origPos);
+        removePiece(piece, selectedPiece.origOrient, selectedPiece.origPos, myBoard);
         
         if(piece.type % 2){ // if odd
             pieceMesh.position.x = toWorldPos.x;
@@ -174,8 +201,7 @@ BATTLESHIP.BoardController = function (options) {
             }
         }
         checkInside();
-        placePiece(piece, pieceMesh);
-     
+        placePiece(piece, pieceMesh, board);     
         pieceMesh.position.y = 7.5;
     }
     
@@ -183,7 +209,6 @@ BATTLESHIP.BoardController = function (options) {
         selectedPiece.obj.rotation.y += 90 * Math.PI / 180;  
         selectedPiece.pieceObj.orientation = 1 - selectedPiece.pieceObj.orientation;
         selectedPiece.pieceObj.pos = centerToPos(selectedPiece.pieceObj, center);
-        console.log('positon',selectedPiece.obj.position);
         if(!(selectedPiece.pieceObj.type % 2)){
             if(selectedPiece.pieceObj.orientation===1){
                 selectedPiece.obj.position.x += squareSize / 2;
@@ -191,11 +216,10 @@ BATTLESHIP.BoardController = function (options) {
                 selectedPiece.obj.position.x -= squareSize / 2;
             }
             selectedPiece.obj.position.z += squareSize / 2;
-            console.log('positon 2',selectedPiece.obj.position);
         }
         checkInside();
-        removePiece(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos);
-        placePiece(selectedPiece.pieceObj, selectedPiece.obj);
+        removePiece(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, board);
+        placePiece(selectedPiece.pieceObj, selectedPiece.obj, board);
     }
     
     
@@ -423,9 +447,13 @@ BATTLESHIP.BoardController = function (options) {
     function onMouseDown(event){
         var mouse3D = getMouse3D(event);
 
-        if(isMouseOnBoard(mouse3D)){
+        if(isMouseOnBoard(mouse3D) || (isMouseOnInitBoard(mouse3D) && setting)){
             if(isPieceOnMousePosition(mouse3D)){
-                selectPiece(mouse3D);
+                selectPiece(mouse3D, initSet);
+                renderer.domElement.addEventListener("mousemove", onMouseMove, false);
+            } else if(isShipInitOnMousePosition(mouse3D) && setting){
+                initSet = true;
+                selectPiece(mouse3D, initSet);
                 renderer.domElement.addEventListener("mousemove", onMouseMove, false);
             }
             cameraController.userRotate = false;
@@ -450,9 +478,9 @@ BATTLESHIP.BoardController = function (options) {
                 deselectPiece();
             } else{
                 if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj)){
-                    instance.movePiece(selectedPiece.boardPos, toBoardPos);
+                    instance.movePiece(selectedPiece.boardPos, toBoardPos, initSet);
                     if(callbacks.pieceDropped){
-                        callbacks.pieceDropped(selectedPiece.origPos,selectedPiece.origOrient, toBoardPos);
+                        callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, toBoardPos, initSet);
                     }
                     selectedPiece = null;
                 }else{
@@ -463,6 +491,8 @@ BATTLESHIP.BoardController = function (options) {
             deselectPiece();
         }
         cameraController.userRotate = true;
+        initSet = false;
+        
     }
 
     /**
@@ -491,22 +521,21 @@ BATTLESHIP.BoardController = function (options) {
 
         if(isMouseOnBoard(mouse3D)){
             if(isPieceOnMousePosition(mouse3D)){
-                selectPiece(mouse3D);
+                selectPiece(mouse3D, false);
                 if(selectedPiece){
                     var center = worldToBoard(selectedPiece.obj.position);
                     if(callbacks.pieceCanRotate && callbacks.pieceCanRotate(selectedPiece.pieceObj, center)){
                         instance.rotatePiece(center);
                         if(callbacks.pieceDropped){
-                            callbacks.pieceDropped(selectedPiece.origPos,selectedPiece.origOrient, center);
+                            callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, center, initSet);
                         }
                         selectedPiece = null;
-
-                        }else{
-                            deselectPiece();
-                        }
                     }else{
                         deselectPiece();
                     }
+                }else{
+                    deselectPiece();
+                }
             }
         }
     }
@@ -532,6 +561,21 @@ BATTLESHIP.BoardController = function (options) {
     }
 
     /**
+     * Converts the init piece board position to 3D world position.
+     * @param {piece} piece objects.
+     * @returns {THREE.Vector3}
+     */
+    function initBoardPieceToWorld (piece) {
+        var x, z;
+        var y = squareSize / 2 + 2.48;
+
+        x = (piece.pos[0] + piece.type / 2) * squareSize - 70;
+        z = (piece.pos[1] + 1 / 2 ) * squareSize;
+         
+        return new THREE.Vector3(x, y, z);
+    }
+
+    /**
      * Converts the board position to 3D world position.
      * @param {Array} pos The board position.
      * @returns {THREE.Vector3}
@@ -548,11 +592,11 @@ BATTLESHIP.BoardController = function (options) {
 
     /**
      * Converts the 3D world position to the board position.
-     * @param {position} pos The board position.
+     * @param {Object} pos The world position.
      * @returns [x, y]
      */
     function worldToBoard(pos){
-        var i = Math.ceil(pos.x / squareSize) - 1;
+        var i = Math.ceil(pos.x / squareSize) -1;
         var j = 10 - Math.ceil((squareSize * 10 - pos.z) / squareSize);
         
         if (i > 9 || i < 0 || j > 9 || j < 0 || isNaN(i) || isNaN(j)) {
@@ -560,7 +604,22 @@ BATTLESHIP.BoardController = function (options) {
         }
      
         return [i, j];
+    }
 
+    /**
+     * Converts the 3D world position to the init board position.
+     * @param {Object} pos The world position.
+     * @returns [x, y]
+     */
+    function worldToInitBoard(pos){
+        var i = Math.floor((70 + pos.x) / squareSize);
+        var j = 10 - Math.ceil((squareSize * 10 - pos.z) / squareSize);
+        
+        if (i > 4 || i < 0 || j > 8 || j < 0 || isNaN(i) || isNaN(j)) {
+            return false;
+        }
+     
+        return [i, j];
     }
 
     /**
@@ -568,7 +627,7 @@ BATTLESHIP.BoardController = function (options) {
      * @param {Object} piece The piece object.
      * @param {THREE.Mesh} mesh The piece Mesh object.
      */
-    function placePiece(piece, mesh){
+    function placePiece(piece, mesh, myBoard){
         var x = piece.pos[0];
         var y = piece.pos[1];
         var obj = {
@@ -577,9 +636,9 @@ BATTLESHIP.BoardController = function (options) {
         }
         for(var i = 0; i < piece.type; i++ ){
             if (piece.orientation === 1){
-                board[x + i][y] = obj;
+                myBoard[x + i][y] = obj;
             } else{
-                board[x][y + i] = obj;
+                myBoard[x][y + i] = obj;
             }       
         }
     }
@@ -590,14 +649,14 @@ BATTLESHIP.BoardController = function (options) {
      * @param {boolean} orientation The original orientation of the piece object.
      * @param {Array} from The original position of the piece object [x,y]
      */
-    function removePiece(piece, orientation, from){
+    function removePiece(piece, orientation, from, myBoard){
         var x = from[0];
         var y = from[1];
         for(var i = 0; i < piece.type; i++ ){
             if (orientation === 1){
-                board[x + i][y] = 0;
+                myBoard[x + i][y] = 0;
             } else{
-                board[x][y + i] = 0;
+                myBoard[x][y + i] = 0;
             }       
         }
     }
@@ -643,14 +702,19 @@ BATTLESHIP.BoardController = function (options) {
      * return {boolean}.
      */
     function isMouseOnBoard(pos) {
-        // if(pos.x >= 0 && pos.x <= squareSize * 10 && pos.y >= 0 && pos.y <= squareSize*10){
-        //     console.log("x: " + pos.x + " y: " + pos.y + " z: " + pos.z);
-        // }
         if (pos.x >= 0 && pos.x <= squareSize * 10 &&
             ((pos.z >= 0 && pos.z <= squareSize * 10))){ 
-            //console.log("x: " + pos.x + " y: " + pos.y + " z: " + pos.z);
             return true;
         } else {
+            return false;
+        }
+    }
+
+    function isMouseOnInitBoard(pos){
+        if(pos.x >= -70 && pos.x <= -20 &&
+            ((pos.z >= 0 && pos.z <= 90))){
+            return true;
+        } else{
             return false;
         }
     }
@@ -662,8 +726,18 @@ BATTLESHIP.BoardController = function (options) {
      */
     function isPieceOnMousePosition(pos){
         var boardPos = worldToBoard(pos);
-        console.log("isPieceOnMousePosition: [", boardPos[0], '][', boardPos[1], '] = ', board[boardPos[0]][boardPos[1]])
+        if(boardPos){
+            console.log('board[',boardPos[0],'][', boardPos[1],'] = ', board[boardPos[0]][boardPos[1]]);
+        }
         if(boardPos && board[boardPos[0]][boardPos[1]] !== 0){
+            return true;
+        }
+        return false;
+    }
+
+    function isShipInitOnMousePosition(pos){
+        var boardPos = worldToInitBoard(pos);
+        if(boardPos && initBoard[boardPos[0]][boardPos[1]] !== 0 && initBoard[boardPos[0]][boardPos[1]] !== undefined ){
             return true;
         }
         return false;
@@ -682,18 +756,23 @@ BATTLESHIP.BoardController = function (options) {
         }
      * return {boolean}.
      */
-    function selectPiece(pos){
-        var boardPos = worldToBoard(pos);
-
-        if(board[boardPos[0]][boardPos[1]] === 0){
+    function selectPiece(pos, initSet){
+        if(initSet){
+            var boardPos = worldToInitBoard(pos);
+            var myBoard = initBoard;
+        }else{
+            var boardPos = worldToBoard(pos);
+            var myBoard = board;
+        }
+        if(myBoard[boardPos[0]][boardPos[1]] === 0){
             selectedPiece = null;
             return false;
         }
         selectedPiece = {};
         selectedPiece.boardPos = boardPos;
-        selectedPiece.obj = board[boardPos[0]][boardPos[1]].pieceMesh;
+        selectedPiece.obj = myBoard[boardPos[0]][boardPos[1]].pieceMesh;
         selectedPiece.origPosition = selectedPiece.obj.position.clone();
-        selectedPiece.pieceObj =  board[boardPos[0]][boardPos[1]].piece;
+        selectedPiece.pieceObj =  myBoard[boardPos[0]][boardPos[1]].piece;
         selectedPiece.origPos = JSON.parse(JSON.stringify(selectedPiece.pieceObj.pos))
         selectedPiece.origOrient = JSON.parse(JSON.stringify(selectedPiece.pieceObj.orientation));
         return true;
