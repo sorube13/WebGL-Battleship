@@ -41,18 +41,10 @@ BATTLESHIP.BoardController = function (options) {
         
     /** @type Object */
     var materials = {};
-    
-    /** @type THREE.Geometry */
-    var carrierGeom = null;
-    /** @type THREE.Geometry */
-    var battleshipGeom = null;
-    /** @type THREE.Geometry */
-    var cruiserGeom = null;
-    /** @type THREE.Geometry */
-    var destroyerGeom = null;
-    /** @type THREE.Geometry */
-    var submarineGeom = null;
-    
+
+    /** @type Object */
+    var geometries = {};
+
     /** @type THREE.Mesh */
     var boardModel;
     
@@ -106,10 +98,24 @@ BATTLESHIP.BoardController = function (options) {
     /** @type Object */
     var callbacks = options.callbacks || {};
 
+    /** @type boolean
+     * setting = true while setting ships on user board
+     * setting = false when all ships are on user board  
+     */
     var setting = true;
 
     var initSet = false;
 
+    var numShips = 7;
+    var numShipsSet = 0;
+
+    var startButton
+
+    /** @type boolean
+     * battle = true when ships are set and interaction with other player begins
+     * battle = false initializing and setting game  
+     */
+    var battle = false;
     /**********************************************************************************************/
     /* Public methods *****************************************************************************/
     
@@ -134,19 +140,19 @@ BATTLESHIP.BoardController = function (options) {
         var pieceMesh;
         switch(piece.type){
             case 1:
-                pieceMesh = new THREE.Mesh(submarineGeom, materials.blackPieceMaterial);
+                pieceMesh = new THREE.Mesh(geometries.submarineGeom, materials.blackPieceMaterial);
                 break;
             case 2:
-                pieceMesh = new THREE.Mesh(destroyerGeom, materials.blackPieceMaterial);
+                pieceMesh = new THREE.Mesh(geometries.destroyerGeom, materials.blackPieceMaterial);
                 break;
             case 3:
-                pieceMesh = new THREE.Mesh(cruiserGeom, materials.blackPieceMaterial);
+                pieceMesh = new THREE.Mesh(geometries.cruiserGeom, materials.blackPieceMaterial);
                 break;
             case 4:
-                pieceMesh = new THREE.Mesh(battleshipGeom, materials.blackPieceMaterial);
+                pieceMesh = new THREE.Mesh(geometries.battleshipGeom, materials.blackPieceMaterial);
                 break;
             case 5:
-                pieceMesh = new THREE.Mesh(carrierGeom, materials.blackPieceMaterial);
+                pieceMesh = new THREE.Mesh(geometries.carrierGeom, materials.blackPieceMaterial);
                 break;
             default:
                 break;
@@ -159,7 +165,6 @@ BATTLESHIP.BoardController = function (options) {
         placePiece(piece, pieceMesh, initBoard);
 
         scene.add(pieceMesh);
-
     }
 
     this.movePiece = function(from, to, initSet){
@@ -309,25 +314,19 @@ BATTLESHIP.BoardController = function (options) {
             wireframe   : true,
             side: THREE.DoubleSide
         });
-        
-     
-        // white piece material
-        materials.whitePieceMaterial = new THREE.MeshPhongMaterial({
-            color: 0xe9e4bd,
-            shininess: 20
-        });
      
         // black piece material
         materials.blackPieceMaterial = new THREE.MeshPhongMaterial({
             color: 0x9f2200,
             shininess: 20
         });
-     
-        // pieces shadow plane material
-        materials.pieceShadowPlane = new THREE.MeshBasicMaterial({
+
+        // start button
+        materials.startButtonMaterial = new THREE.MeshBasicMaterial({
             transparent: true,
-            map: THREE.ImageUtils.loadTexture(assetsUrl + 'piece_shadow.png')
+            map: THREE.ImageUtils.loadTexture(assetsUrl + 'start.png')
         });
+     
     }
     
     /**
@@ -393,20 +392,17 @@ BATTLESHIP.BoardController = function (options) {
             }
         }
 
-        carrierGeom = new THREE.CubeGeometry(squareSize * 5, squareSize - 1, squareSize - 1 );
-        // aircraftCarrier.position.set(squareSize * 5 / 2, squareSize / 2 + 2.48, squareSize / 2);
+        geometries.carrierGeom = new THREE.CubeGeometry(squareSize * 5, squareSize - 1, squareSize - 1 );
+        geometries.battleshipGeom = new THREE.CubeGeometry(squareSize * 4, squareSize - 1, squareSize - 1);
+        geometries.cruiserGeom = new THREE.CubeGeometry(squareSize * 3, squareSize - 1, squareSize - 1 );
+        geometries.destroyerGeom = new THREE.CubeGeometry(squareSize * 2, squareSize - 1, squareSize - 1 );
+        geometries.submarineGeom = new THREE.CubeGeometry(squareSize, squareSize - 1, squareSize - 1 );
+        geometries.startButtonGeom = new THREE.CubeGeometry(squareSize * 5, squareSize * 2, 1 );
 
-        battleshipGeom = new THREE.CubeGeometry(squareSize * 4, squareSize - 1, squareSize - 1);
-        // battleship.position.set(13 * squareSize / 2, squareSize / 2 + 2.48, squareSize * 5);
+        var geometry = new THREE.SphereGeometry( 20, 32, 32 );
+        var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+        
 
-        cruiserGeom = new THREE.CubeGeometry(squareSize * 3, squareSize - 1, squareSize - 1 );
-        // cruiser.position.set(squareSize * 5 / 2, squareSize / 2 + 2.48, squareSize * 17 / 2);
-
-        destroyerGeom = new THREE.CubeGeometry(squareSize * 2, squareSize - 1, squareSize - 1 );
-        // destroyer1.position.set(squareSize * 2 , squareSize / 2 + 2.48, squareSize * 7 / 2);
-
-        submarineGeom = new THREE.CubeGeometry(squareSize, squareSize - 1, squareSize - 1 );
-        // submarine2.position.set(squareSize * 7 / 2, squareSize / 2 + 2.48, squareSize * 11 / 2);
 
         callback();
     }
@@ -481,6 +477,7 @@ BATTLESHIP.BoardController = function (options) {
                     instance.movePiece(selectedPiece.boardPos, toBoardPos, initSet);
                     if(callbacks.pieceDropped){
                         callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, toBoardPos, initSet);
+                        checkLoad(initSet);
                     }
                     selectedPiece = null;
                 }else{
@@ -537,6 +534,17 @@ BATTLESHIP.BoardController = function (options) {
                     deselectPiece();
                 }
             }
+        }
+    }
+
+    /**
+     * Listener for click event.
+     * Starts the game if start button is clicked
+     */
+    function onMouseClick(event){
+        var mouse3D = getYMouse3D(event);
+        if(isStartOnMousePosition(mouse3D)){
+            startGame();
         }
     }
 
@@ -678,8 +686,8 @@ BATTLESHIP.BoardController = function (options) {
 
         var pos = new THREE.Vector3(0, 0, 1);
         var pMouse = new THREE.Vector3(
-            (x / renderer.domElement.width) * 2 - 1,
-            -(y / renderer.domElement.height) * 2 + 1,
+            (x / renderer.domElement.clientWidth) * 2 - 1,
+            -(y / renderer.domElement.clientHeight) * 2 + 1,
             1
         );
 
@@ -693,6 +701,37 @@ BATTLESHIP.BoardController = function (options) {
         //pos.y = pMouse.y + (cam.y - pMouse.y) * m;
         pos.z = pMouse.z + (cam.z - pMouse.z) * m;
 
+        return pos;
+    }
+
+    /**
+     * Finds the coordinates of the mouse in the scene 
+     * return position Position of the mouse in perspective with the bottom board (user board)
+     */
+    function getYMouse3D(mouseEvent){
+        var x,y;
+        if(mouseEvent.offsetX !== undefined){
+            x = mouseEvent.offsetX;
+            y = mouseEvent.offsetY;
+        } else{
+            x = mouseEvent.layerX;
+            y = mouseEvent.layerY;
+        }
+
+        var vector = new THREE.Vector3();
+
+        vector.set(
+            ( x / window.innerWidth ) * 2 - 1,
+            - ( y / window.innerHeight ) * 2 + 1,
+            0.5 );
+
+        projector.unprojectVector(vector, camera);
+
+        var dir = vector.sub( camera.position ).normalize();
+
+        var distance = - camera.position.z / dir.z;
+
+        var pos = camera.position.clone().add( dir.multiplyScalar( distance ) )
         return pos;
     }
 
@@ -849,6 +888,38 @@ BATTLESHIP.BoardController = function (options) {
             }
         }    
     }
+
+    function checkLoad(initSet){
+        if(initSet){
+            numShipsSet++;
+            if(numShipsSet === numShips){
+                setting = false;
+                startButton = new THREE.Mesh(geometries.startButtonGeom, materials.startButtonMaterial);
+                startButton.position= {x: -50, y: 50, z:0};//THREE.Vector3(-50, 50, 0);
+                scene.add(startButton);
+                renderer.domElement.addEventListener("click", onMouseClick, false);
+
+
+            }
+        }
+
+    }
+
+    function isStartOnMousePosition(pos){
+        if((pos.x >= -75 && pos.x<=-25) && (pos.y >= 40 && pos.y <= 60)){
+            return true;
+        }
+        return false;
+    }
+
+    function startGame(){
+        scene.remove(startButton);
+        battle = true;
+        renderer.domElement.removeEventListener('mousedown', onMouseDown, false);
+        renderer.domElement.removeEventListener('mouseup', onMouseUp, false);
+
+    }
+
 
    
 };
