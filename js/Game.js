@@ -58,7 +58,8 @@ BATTLESHIP.Game = function(options){
             callbacks: {
                 pieceCanDrop : isMoveLegal,
                 pieceCanRotate: isRotationLegal,
-                pieceDropped : pieceMoved 
+                pieceDropped : pieceMoved,
+                selectTarget: checkTarget 
             }
         });
 
@@ -364,6 +365,10 @@ BATTLESHIP.Game = function(options){
 
         return true;
 
+    }
+
+    function checkTarget(pos){
+        console.log('target:', pos);
     }
 
 

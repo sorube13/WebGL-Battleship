@@ -109,7 +109,7 @@ BATTLESHIP.BoardController = function (options) {
     var numShips = 7;
     var numShipsSet = 0;
 
-    var startButton
+    var startButton;
 
     /** @type boolean
      * battle = true when ships are set and interaction with other player begins
@@ -367,10 +367,7 @@ BATTLESHIP.BoardController = function (options) {
         }
 
         var oppBoardModel = new THREE.Mesh(new THREE.CubeGeometry(squareSize * 10 + 20, squareSize * 10 + 20, 5), materials.boardMaterial);
-        // oppBoardModel.position.set(squareSize * 5 , (squareSize * 5 + 10) * Math.cos(-30 * Math.PI / 180), -(0.02  + 10) * Math.sin(-30 * Math.PI / 180));
-
         oppBoardModel.position.set(squareSize * 5 , (squareSize * 5 + 10), -(0.02 + 10));
-        //oppBoardModel.rotation.x = -30 * Math.PI / 180; 
         scene.add(oppBoardModel);
         
 
@@ -397,7 +394,7 @@ BATTLESHIP.BoardController = function (options) {
         geometries.cruiserGeom = new THREE.CubeGeometry(squareSize * 3, squareSize - 1, squareSize - 1 );
         geometries.destroyerGeom = new THREE.CubeGeometry(squareSize * 2, squareSize - 1, squareSize - 1 );
         geometries.submarineGeom = new THREE.CubeGeometry(squareSize, squareSize - 1, squareSize - 1 );
-        geometries.startButtonGeom = new THREE.CubeGeometry(squareSize * 5, squareSize * 2, 1 );
+        geometries.startButtonGeom = new THREE.CubeGeometry(squareSize * 5, squareSize * 2, squareSize * 2 );
 
         var geometry = new THREE.SphereGeometry( 20, 32, 32 );
         var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
@@ -543,8 +540,19 @@ BATTLESHIP.BoardController = function (options) {
      */
     function onMouseClick(event){
         var mouse3D = getYMouse3D(event);
-        if(isStartOnMousePosition(mouse3D)){
-            startGame();
+        if(!battle){ // phase 1: construction of board
+            if(isStartOnMousePosition(mouse3D)){
+                startGame();
+            }
+        }else{ // phase 2: game
+            if(isMouseOnOppBoard(mouse3D)){
+                var pos = [ Math.floor(mouse3D.x / squareSize) , Math.floor((squareSize * 11 - mouse3D.y) / squareSize)] 
+                if(callbacks.selectTarget){
+                    callbacks.selectTarget(pos);
+                    
+                }
+            }
+
         }
     }
 
@@ -749,11 +757,30 @@ BATTLESHIP.BoardController = function (options) {
         }
     }
 
+    /**
+     * Checks whether the mouse is on the initial board.
+     * @param {Array} pos The coordinates of the mouse position in the scene.
+     * return {boolean}.
+     */
     function isMouseOnInitBoard(pos){
         if(pos.x >= -70 && pos.x <= -20 &&
             ((pos.z >= 0 && pos.z <= 90))){
             return true;
         } else{
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether the mouse is on the opponent's board.
+     * @param {Array} pos The coordinates of the mouse position in the scene.
+     * return {boolean}.
+     */
+    function isMouseOnOppBoard(pos) {
+        if (pos.x >= 0 && pos.x <= squareSize * 10 &&
+            ((pos.y >= squareSize && pos.y <= (squareSize + 1) * 10))){ 
+            return true;
+        } else {
             return false;
         }
     }
@@ -782,7 +809,7 @@ BATTLESHIP.BoardController = function (options) {
         return false;
     }
 
-     /**
+    /**
      * Updates selectedPiece with the objects related to the object in the position given.
      * @param {Array} pos The coordinates of the piece chosen.
      * selectedPiece{
@@ -917,6 +944,8 @@ BATTLESHIP.BoardController = function (options) {
         battle = true;
         renderer.domElement.removeEventListener('mousedown', onMouseDown, false);
         renderer.domElement.removeEventListener('mouseup', onMouseUp, false);
+        renderer.domElement.removeEventListener('dblclick', onDoubleClick, false);
+
 
     }
 
