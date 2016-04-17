@@ -480,7 +480,7 @@ BATTLESHIP.BoardController = function (options) {
                 if(callbacks.pieceCanDrop && callbacks.pieceCanDrop(toBoardPos, selectedPiece.pieceObj)){
                     instance.movePiece(selectedPiece.boardPos, toBoardPos, initSet);
                     if(callbacks.pieceDropped){
-                        callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origPos, toBoardPos, initSet);
+                        callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, toBoardPos, initSet);
                     }
                     selectedPiece = null;
                 }else{
@@ -530,13 +530,12 @@ BATTLESHIP.BoardController = function (options) {
                             callbacks.pieceDropped(selectedPiece.pieceObj, selectedPiece.origOrient, selectedPiece.origPos, center, initSet);
                         }
                         selectedPiece = null;
-
-                        }else{
-                            deselectPiece();
-                        }
                     }else{
                         deselectPiece();
                     }
+                }else{
+                    deselectPiece();
+                }
             }
         }
     }
@@ -738,7 +737,7 @@ BATTLESHIP.BoardController = function (options) {
 
     function isShipInitOnMousePosition(pos){
         var boardPos = worldToInitBoard(pos);
-        if(boardPos && initBoard[boardPos[0]][boardPos[1]] !== 0){
+        if(boardPos && initBoard[boardPos[0]][boardPos[1]] !== 0 && initBoard[boardPos[0]][boardPos[1]] !== undefined ){
             return true;
         }
         return false;
@@ -758,7 +757,6 @@ BATTLESHIP.BoardController = function (options) {
      * return {boolean}.
      */
     function selectPiece(pos, initSet){
-        console.log('selectedPiece:', pos);
         if(initSet){
             var boardPos = worldToInitBoard(pos);
             var myBoard = initBoard;

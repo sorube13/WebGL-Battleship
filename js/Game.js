@@ -275,8 +275,9 @@ BATTLESHIP.Game = function(options){
         var toCol = to[0]
         var toRow = to[1];
 
-        if(!initSet)
+        if(!initSet){
             removePiece(piece, orientation, from);
+        }
 
         placePiece(piece);
     }
